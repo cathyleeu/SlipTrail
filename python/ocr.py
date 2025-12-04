@@ -3,18 +3,18 @@ import json
 from paddleocr import PaddleOCR
 
 def ocr_image(image_path):
-    ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+    ocr = PaddleOCR(
+        lang='en',
+        use_doc_orientation_classify=False,
+        use_doc_unwarping=False,
+        use_textline_orientation=False
+    )
 
-    # Perform OCR on the image
-    result = ocr.predict(image_path, cls=True)
+    results = ocr.predict(image_path)[0]
+    all_texts = "\n".join(results['rec_texts'])
 
-    # Extract text from the result
-    extracted_text = []
-    for line in result:
-        for word_info in line:
-            extracted_text.append(word_info[1][0])
-
-    return extracted_text
+    print(all_texts)
+    return all_texts
 
 if __name__ == "__main__":
     if len(sys.argv) != 2: # Expecting exactly one argument: the image path
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     image_path = sys.argv[1]
-    text_lines = ocr_image(image_path)
+    ocr_result = ocr_image(image_path)
 
-    # Output the extracted text as a JSON array
-    print(json.dumps(text_lines, indent=2))
+    # JSON 출력 (한글 깨짐 방지: ensure_ascii=False)
+    print(json.dumps(ocr_result, ensure_ascii=False, indent=2))
