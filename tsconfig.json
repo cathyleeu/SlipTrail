@@ -23,7 +23,8 @@
       "@utils/*": ["./utils/*"],
       "@styles/*": ["./styles/*"],
       "@python/*": ["./python/*"],
-      "@hooks/*": ["./app/hooks/*"]
+      "@hooks/*": ["./app/hooks/*"],
+      "@lib/*": ["./lib/*"]
     }
   },
   "include": [
