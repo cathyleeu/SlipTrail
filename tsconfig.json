@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@components/*": ["./app/components/*"],
-      "@utils/*": ["./utils/*"],
+      "@utils/*": ["./app/utils/*"],
       "@styles/*": ["./styles/*"],
       "@python/*": ["./python/*"],
       "@hooks/*": ["./app/hooks/*"],
