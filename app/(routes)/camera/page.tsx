@@ -29,8 +29,9 @@ export default function CameraPage() {
     try {
       const compressedFile = await compressImage(photoBlob)
 
+      const HF_URL = 'https://2222ugggg-sliptrail-ocr.hf.space/ocr'
       // API 호출
-      const ocrResponse = await fetch('/api/ocr', {
+      const ocrResponse = await fetch(HF_URL, {
         method: 'POST',
         body: compressedFile,
       })
