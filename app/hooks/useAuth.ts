@@ -1,29 +1,43 @@
 'use client'
 import { useAuthContext } from '@context/AuthContext'
 import { supabaseClient } from '@lib/supabase/client'
+import { AuthErrorType, AuthResult } from '@types'
+import { parseAuthError } from '@utils/auth'
+import { useRouter } from 'next/navigation'
 
 export function useAuth() {
   const { user, session, loading } = useAuthContext()
   const supabase = supabaseClient()
+  const router = useRouter()
 
-  async function login(email: string, password: string) {
+  function handleResult(error?: AuthErrorType) {
+    if (error) {
+      return {
+        success: false,
+        error: parseAuthError(error), // "Invalid credentials" → "이메일 또는 비밀번호 오류"
+      }
+    }
+    return { success: true, error: null }
+  }
+  async function login(email: string, password: string): Promise<AuthResult> {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-    if (error) throw error
+    return handleResult(error)
   }
 
-  async function signup(email: string, password: string) {
+  async function signup(email: string, password: string): Promise<AuthResult> {
     const { error } = await supabase.auth.signUp({
       email,
       password,
     })
-    if (error) throw error
+    return handleResult(error)
   }
 
   async function logout() {
     const { error } = await supabase.auth.signOut()
+    router.push('/login')
     if (error) throw error
   }
 
