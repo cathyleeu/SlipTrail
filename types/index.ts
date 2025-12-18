@@ -1,1 +1,2 @@
-export type { AuthErrorType, AuthResult } from './auth'
+export type * from './auth'
+export type * from './profile'
