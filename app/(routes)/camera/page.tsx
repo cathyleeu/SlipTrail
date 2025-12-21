@@ -1,23 +1,16 @@
 'use client'
 
 import { useCamera } from '@hooks/useCamera'
-import { useOcr } from '@hooks/useOcr'
+import { useReceiptAnalysis } from '@hooks/useReceiptAnalysis'
 import { compressImage } from '@utils/compressImage'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
-interface OCRResult {
-  success: boolean
-  data: Array<{ text: string; confidence: number; bbox: number[][] }>
-  raw_text: string
-}
-
 export default function CameraPage() {
   const { videoRef, startCamera, photoUrl, photoBlob, takePhoto, showRetake, resetPhoto } =
     useCamera()
-  const { runOcr, data: ocrResult, loading, reset } = useOcr()
-  const [, setLegacyResult] = useState<OCRResult | null>(null)
+  const { analyze, data: analysis, loading, reset } = useReceiptAnalysis()
   const [isPreparing, setIsPreparing] = useState(false)
 
   useEffect(() => {
@@ -32,19 +25,10 @@ export default function CameraPage() {
 
       reset()
 
-      const result = await runOcr({ file: compressedFile })
+      const result = await analyze({ file: compressedFile })
 
-      // Keep legacy state shape for now (optional)
       if (result.success) {
-        setLegacyResult({
-          success: true,
-          data: (result.data ?? []).map((x) => ({
-            text: x.text,
-            confidence: x.confidence ?? 0,
-            bbox: x.bbox ?? [],
-          })),
-          raw_text: result.raw_text,
-        })
+        console.log('Analysis complete:', result.receipt)
       }
     } catch (error) {
       console.error('Error:', error)
@@ -98,10 +82,29 @@ export default function CameraPage() {
       )}
 
       {/* OCR 결과 표시 */}
-      {ocrResult && (
+      {analysis && (
         <div className="absolute top-4 left-4 right-4 bg-white/90 p-4 rounded-lg max-h-64 overflow-y-auto z-50">
-          <h3 className="font-bold mb-2">OCR Result:</h3>
-          <pre className="text-xs">{ocrResult.success ? ocrResult.raw_text : ocrResult.error}</pre>
+          <h3 className="font-bold mb-2">Analysis Result:</h3>
+          {'success' in analysis && analysis.success ? (
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs font-semibold text-gray-700 mb-1">OCR</div>
+                <pre className="text-xs whitespace-pre-wrap">{analysis.ocr.text}</pre>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-gray-700 mb-1">Parsed</div>
+                <pre className="text-xs whitespace-pre-wrap">
+                  {JSON.stringify(analysis.receipt, null, 2)}
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <pre className="text-xs whitespace-pre-wrap">
+              {'success' in analysis && !analysis.success
+                ? `[${analysis.stage}] ${analysis.error}`
+                : 'Analysis failed'}
+            </pre>
+          )}
         </div>
       )}
     </div>

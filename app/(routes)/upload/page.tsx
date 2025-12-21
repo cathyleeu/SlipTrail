@@ -1,13 +1,13 @@
 'use client'
 
-import { useOcr } from '@hooks/useOcr'
+import { useReceiptAnalysis } from '@hooks/useReceiptAnalysis'
 import { compressImage } from '@utils/compressImage'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 export default function UploadPage() {
-  const { runOcr, data: ocrResult, loading, reset } = useOcr()
+  const { analyze, data: analysis, loading, reset } = useReceiptAnalysis()
   const [file, setFile] = useState<File | null>(null)
   const [isPreparing, setIsPreparing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -40,7 +40,7 @@ export default function UploadPage() {
       setIsPreparing(true)
       const compressedFile = await compressImage(file)
       reset()
-      await runOcr({ file: compressedFile })
+      await analyze({ file: compressedFile })
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -111,15 +111,34 @@ export default function UploadPage() {
             onClick={onRunOcr}
             disabled={!file || loading || isPreparing}
           >
-            OCR 요청
+            분석 요청
           </motion.button>
 
-          {ocrResult && (
+          {analysis && (
             <div className="rounded-2xl bg-gray-50 p-4 max-h-56 overflow-y-auto">
               <div className="text-sm font-semibold text-gray-900 mb-2">추출 결과</div>
-              <pre className="text-xs whitespace-pre-wrap text-gray-800">
-                {ocrResult.success ? ocrResult.raw_text : ocrResult.error}
-              </pre>
+              {'success' in analysis && analysis.success ? (
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs font-semibold text-gray-700 mb-1">OCR</div>
+                    <pre className="text-xs whitespace-pre-wrap text-gray-800">
+                      {analysis.ocr.text}
+                    </pre>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-700 mb-1">Parsed</div>
+                    <pre className="text-xs whitespace-pre-wrap text-gray-800">
+                      {JSON.stringify(analysis.receipt, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              ) : (
+                <pre className="text-xs whitespace-pre-wrap text-gray-800">
+                  {'success' in analysis && !analysis.success
+                    ? `[${analysis.stage}] ${analysis.error}`
+                    : 'Analysis failed'}
+                </pre>
+              )}
             </div>
           )}
         </div>
