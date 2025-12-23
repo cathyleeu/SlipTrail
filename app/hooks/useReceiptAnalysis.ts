@@ -5,7 +5,10 @@ import { useMutation } from '@tanstack/react-query'
 import type {
   AnalyzeOptions,
   ExternalOcrApiResponse,
+  GeocodeResult,
+  GeoLocation,
   OcrResult,
+  ParsedReceipt,
   ParseReceiptResult,
   ReceiptAnalysisResult,
   RequestParsingOptions,
@@ -53,7 +56,7 @@ export async function requestParsing({
 }: RequestParsingOptions): Promise<ParseReceiptResult> {
   try {
     // 내부 API - apiSuccess 자동 unwrap
-    const receipt = await request<unknown>('/api/parse-receipt', {
+    const receipt = await request<ParsedReceipt>('/api/parse-receipt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rawText }),
@@ -72,6 +75,28 @@ export async function requestParsing({
     throw err
   }
 }
+
+export async function requestGeoCoding(address: string): Promise<GeocodeResult> {
+  try {
+    const location = await request<GeoLocation>('/api/geocode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address }),
+      unwrapApiSuccess: true,
+    })
+    return { success: true, location }
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return {
+        success: false,
+        error: err.message,
+        details: err.details,
+      }
+    }
+    throw err
+  }
+}
+
 async function analyzeRequest({ file }: AnalyzeOptions): Promise<ReceiptAnalysisResult> {
   const ocr = await requestOcr({ file })
   if (!ocr.success) {
@@ -84,7 +109,13 @@ async function analyzeRequest({ file }: AnalyzeOptions): Promise<ReceiptAnalysis
     return { success: false, stage: 'parse', error: parsed.error, details: parsed.details }
   }
 
-  return { success: true, ocr, receipt: parsed.receipt }
+  const geo = await requestGeoCoding(parsed.receipt.address || '')
+
+  if (!geo.success) {
+    return { success: false, stage: 'geocode', error: 'geocoding failed' }
+  }
+
+  return { success: true, ocr, receipt: parsed.receipt, location: geo.location }
 }
 
 export function useReceiptAnalysis() {
