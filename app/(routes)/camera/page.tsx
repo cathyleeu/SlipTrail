@@ -12,7 +12,7 @@ export default function CameraPage() {
   const { videoRef, startCamera, photoUrl, photoBlob, takePhoto, showRetake, resetPhoto } =
     useCamera()
   const router = useRouter()
-  const { analyzeReceipt, isPreparing, isProcessing, progress, stage, imageUrl } = useAnalysisFlow()
+  const { analyzeReceipt, isProcessing, progress, stage, imageUrl } = useAnalysisFlow()
   const { setImageUrl, clearImageUrl } = useReceiptImageStore()
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function CameraPage() {
   }
 
   const handleAnalyze = async () => {
-    if (!photoBlob || isPreparing) return
+    if (!photoBlob || isProcessing) return
 
     await analyzeReceipt({
       receiptImg: photoBlob,
@@ -102,10 +102,10 @@ export default function CameraPage() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleAnalyze}
-                disabled={isPreparing}
+                disabled={isProcessing}
                 className="px-8 py-3 bg-blue-500 text-white rounded-full font-medium disabled:opacity-50"
               >
-                {isPreparing ? 'Processing...' : 'Continue'}
+                {isProcessing ? 'Processing...' : 'Continue'}
               </motion.button>
             </>
           ) : (

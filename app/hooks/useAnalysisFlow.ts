@@ -15,7 +15,6 @@ export function useAnalysisFlow() {
   const { setDraft } = useReceiptDraftStore()
   const { setLocation } = useMapDraftStore()
   const { imageUrl, setImageUrl, clearImageUrl } = useReceiptImageStore()
-  const [isPreparing, setIsPreparing] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [stage, setStage] = useState('Starting...')
@@ -23,7 +22,6 @@ export function useAnalysisFlow() {
   const analyzeReceipt = useCallback(
     async ({ receiptImg, onError }: AnalyzeReceiptOptions) => {
       try {
-        setIsPreparing(true)
         setIsProcessing(true)
         setProgress(0)
         setStage('Starting...')
@@ -59,7 +57,6 @@ export function useAnalysisFlow() {
         onError?.(errorMessage)
         throw error
       } finally {
-        setIsPreparing(false)
         setIsProcessing(false)
       }
     },
@@ -68,7 +65,6 @@ export function useAnalysisFlow() {
 
   return {
     analyzeReceipt,
-    isPreparing,
     isProcessing,
     progress,
     stage,

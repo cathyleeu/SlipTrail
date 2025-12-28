@@ -11,7 +11,7 @@ import { useRef, useState } from 'react'
 export default function UploadPage() {
   const router = useRouter()
   const { data: analysis, loading, reset } = useAnalysisMutation()
-  const { analyzeReceipt, isPreparing, isProcessing, progress, stage } = useAnalysisFlow()
+  const { analyzeReceipt, isProcessing, progress, stage } = useAnalysisFlow()
   const { imageUrl, setImageUrl, clearImageUrl } = useReceiptImageStore()
   const [receiptImg, setReceiptImg] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -30,12 +30,12 @@ export default function UploadPage() {
   }
 
   const onPickClick = () => {
-    if (loading || isPreparing) return
+    if (loading || isProcessing) return
     fileInputRef.current?.click()
   }
 
   const onRunOcr = async () => {
-    if (!receiptImg || loading || isPreparing) return
+    if (!receiptImg || loading || isProcessing) return
 
     await analyzeReceipt({
       receiptImg,
@@ -88,7 +88,7 @@ export default function UploadPage() {
                 type="button"
                 className="px-3 py-2 text-sm rounded-lg bg-white border border-gray-200"
                 onClick={onPickClick}
-                disabled={loading || isPreparing}
+                disabled={loading || isProcessing}
               >
                 선택
               </motion.button>
@@ -109,7 +109,7 @@ export default function UploadPage() {
             whileTap={{ scale: 0.98 }}
             className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl disabled:opacity-50"
             onClick={onRunOcr}
-            disabled={!receiptImg || loading || isPreparing}
+            disabled={!receiptImg || loading || isProcessing}
           >
             분석 요청
           </motion.button>
