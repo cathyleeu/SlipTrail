@@ -9,8 +9,15 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function CameraPage() {
-  const { videoRef, startCamera, photoUrl, photoBlob, takePhoto, showRetake, resetPhoto } =
-    useCamera()
+  const {
+    videoRef,
+    startCamera,
+    photoUrl,
+    photoBlob: receiptFile,
+    takePhoto,
+    showRetake,
+    resetPhoto,
+  } = useCamera()
   const router = useRouter()
   const { analyzeReceipt, isProcessing, progress, stage, imageUrl } = useAnalysisFlow()
   const { setImageUrl, clearImageUrl } = useReceiptImageStore()
@@ -19,11 +26,8 @@ export default function CameraPage() {
     startCamera()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 사진 촬영 후 store에 저장
   useEffect(() => {
-    if (photoUrl) {
-      setImageUrl(photoUrl)
-    }
+    if (photoUrl) setImageUrl(photoUrl)
   }, [photoUrl, setImageUrl])
 
   const handleRetake = () => {
@@ -32,10 +36,10 @@ export default function CameraPage() {
   }
 
   const handleAnalyze = async () => {
-    if (!photoBlob || isProcessing) return
+    if (!receiptFile || isProcessing) return
 
     await analyzeReceipt({
-      receiptImg: photoBlob,
+      receiptFile,
       onError: (error) => {
         console.error('Analysis failed:', error)
         alert(`분석 실패: ${error}`)
