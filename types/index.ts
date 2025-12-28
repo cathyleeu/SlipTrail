@@ -8,3 +8,6 @@ export type * from './analysis'
 export type * from './location'
 export type * from './ocr'
 export type * from './receipt'
+
+// Runtime utilities
+export { toGeoLocation } from './location'
