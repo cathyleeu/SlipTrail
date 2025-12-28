@@ -6,13 +6,14 @@ import type {
   AnalyzeOptions,
   ExternalOcrApiResponse,
   GeocodeResult,
-  GeoLocation,
+  NominatimResponse,
   OcrResult,
   ParsedReceipt,
   ParseReceiptResult,
   ReceiptAnalysisResult,
   RequestParsingOptions,
 } from '@types'
+import { toGeoLocation } from '@types'
 import { useCallback } from 'react'
 
 export async function requestOcr({ file }: AnalyzeOptions): Promise<OcrResult> {
@@ -78,13 +79,14 @@ export async function requestParsing({
 
 export async function requestGeoCoding(address: string): Promise<GeocodeResult> {
   try {
-    const location = await request<GeoLocation>('/api/geocode', {
+    const location = await request<NominatimResponse>('/api/geocode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address }),
       unwrapApiSuccess: true,
     })
-    return { success: true, location }
+    console.log('Geocoding location:', location, toGeoLocation(location))
+    return { success: true, location: toGeoLocation(location) }
   } catch (err) {
     if (err instanceof ApiError) {
       return {
