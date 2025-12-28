@@ -97,11 +97,18 @@ export async function requestGeoCoding(address: string): Promise<GeocodeResult> 
   }
 }
 
-async function analyzeRequest({ file }: AnalyzeOptions): Promise<ReceiptAnalysisResult> {
+async function analyzeRequest(
+  { file }: AnalyzeOptions,
+  onProgress?: (progress: number, stage: string) => void
+): Promise<ReceiptAnalysisResult> {
+  onProgress?.(10, 'Starting OCR...')
+
   const ocr = await requestOcr({ file })
   if (!ocr.success) {
     return { success: false, stage: 'ocr', error: ocr.error, details: ocr.details }
   }
+
+  onProgress?.(40, 'Parsing receipt...')
 
   const parsed = await requestParsing({ rawText: ocr.text })
 
@@ -109,22 +116,32 @@ async function analyzeRequest({ file }: AnalyzeOptions): Promise<ReceiptAnalysis
     return { success: false, stage: 'parse', error: parsed.error, details: parsed.details }
   }
 
+  onProgress?.(70, 'Finding location...')
+
   const geo = await requestGeoCoding(parsed.receipt.address || '')
 
   if (!geo.success) {
     return { success: false, stage: 'geocode', error: 'geocoding failed' }
   }
 
+  onProgress?.(100, 'Complete!')
+
   return { success: true, ocr, receipt: parsed.receipt, location: geo.location }
 }
 
 export function useAnalysisMutation() {
   const mutation = useMutation({
-    mutationFn: analyzeRequest,
+    mutationFn: ({
+      file,
+      onProgress,
+    }: AnalyzeOptions & { onProgress?: (progress: number, stage: string) => void }) =>
+      analyzeRequest({ file }, onProgress),
   })
 
   const analyze = useCallback(
-    async (options: AnalyzeOptions) => {
+    async (
+      options: AnalyzeOptions & { onProgress?: (progress: number, stage: string) => void }
+    ) => {
       return mutation.mutateAsync(options)
     },
     [mutation]
