@@ -1,21 +1,20 @@
 'use client'
 
-import { useReceiptAnalysis } from '@hooks/useReceiptAnalysis'
-import { compressImage } from '@utils/compressImage'
+import { useAnalysisFlow, useAnalysisMutation } from '@hooks'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 export default function UploadPage() {
-  const { analyze, data: analysis, loading, reset } = useReceiptAnalysis()
-  const [file, setFile] = useState<File | null>(null)
-  const [isPreparing, setIsPreparing] = useState(false)
+  const { data: analysis, loading, reset } = useAnalysisMutation()
+  const { analyzeReceipt, isPreparing } = useAnalysisFlow()
+  const [receiptImg, setReceiptImg] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const previewUrl = useMemo(() => {
-    if (!file) return null
-    return URL.createObjectURL(file)
-  }, [file])
+    if (!receiptImg) return null
+    return URL.createObjectURL(receiptImg)
+  }, [receiptImg])
 
   useEffect(() => {
     return () => {
@@ -25,7 +24,7 @@ export default function UploadPage() {
 
   const onPickFile: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const next = e.target.files?.[0] ?? null
-    setFile(next)
+    setReceiptImg(next)
     reset()
   }
 
@@ -35,17 +34,15 @@ export default function UploadPage() {
   }
 
   const onRunOcr = async () => {
-    if (!file || loading || isPreparing) return
-    try {
-      setIsPreparing(true)
-      const compressedFile = await compressImage(file)
-      reset()
-      await analyze({ file: compressedFile })
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setIsPreparing(false)
-    }
+    if (!receiptImg || loading || isPreparing) return
+
+    await analyzeReceipt({
+      receiptImg,
+      onError: (error) => {
+        console.error('Analysis failed:', error)
+        // 여기서 toast 알림 등을 추가할 수 있습니다
+      },
+    })
   }
 
   return (
@@ -60,7 +57,7 @@ export default function UploadPage() {
             type="button"
             className="text-sm text-blue-600 font-medium"
             onClick={() => {
-              setFile(null)
+              setReceiptImg(null)
               reset()
             }}
             disabled={loading}
@@ -81,7 +78,7 @@ export default function UploadPage() {
           <div className="rounded-2xl bg-gray-50 p-3">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700 truncate">
-                {file ? file.name : '이미지를 선택해주세요'}
+                {receiptImg ? receiptImg.name : '이미지를 선택해주세요'}
               </div>
               <motion.button
                 whileTap={{ scale: 0.98 }}
@@ -109,7 +106,7 @@ export default function UploadPage() {
             whileTap={{ scale: 0.98 }}
             className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl disabled:opacity-50"
             onClick={onRunOcr}
-            disabled={!file || loading || isPreparing}
+            disabled={!receiptImg || loading || isPreparing}
           >
             분석 요청
           </motion.button>

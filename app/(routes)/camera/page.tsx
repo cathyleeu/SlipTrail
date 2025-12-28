@@ -1,17 +1,16 @@
 'use client'
 
-import { useCamera } from '@hooks/useCamera'
-import { compressImage } from '@utils/compressImage'
+import { useAnalysisFlow, useCamera } from '@hooks'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 export default function CameraPage() {
   const { videoRef, startCamera, photoUrl, photoBlob, takePhoto, showRetake, resetPhoto } =
     useCamera()
   const router = useRouter()
-  const [isPreparing, setIsPreparing] = useState(false)
+  const { analyzeReceipt, isPreparing } = useAnalysisFlow()
 
   useEffect(() => {
     startCamera()
@@ -19,21 +18,14 @@ export default function CameraPage() {
 
   const handleAnalyze = async () => {
     if (!photoBlob || isPreparing) return
-    try {
-      setIsPreparing(true)
-      const compressedFile = await compressImage(photoBlob)
 
-      // Store in sessionStorage and navigate to processing
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        sessionStorage.setItem('receiptImage', reader.result as string)
-        router.push('/processing')
-      }
-      reader.readAsDataURL(compressedFile)
-    } catch (error) {
-      console.error('Error:', error)
-      setIsPreparing(false)
-    }
+    await analyzeReceipt({
+      receiptImg: photoBlob,
+      onError: (error) => {
+        console.error('Analysis failed:', error)
+        alert(`분석 실패: ${error}`)
+      },
+    })
   }
 
   return (
