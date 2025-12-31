@@ -12,6 +12,8 @@ type MapProps = {
   className?: string
 }
 
+// TODO: marker style customization: emoji, color options
+// popup content customization by props: address, custom text
 export default function Map({ location, zoom = 15, className = 'h-64 w-full' }: MapProps) {
   // Fix for default marker icon
   useEffect(() => {
