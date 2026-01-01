@@ -1,6 +1,7 @@
 'use client'
 
 import { useMapDraftStore, useReceiptDraftStore } from '@store'
+import { cn } from '@utils/cn'
 import { motion } from 'motion/react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -200,41 +201,23 @@ export default function ResultPage() {
 
       {/* Bottom Actions */}
       <div className="grid grid-cols-2 gap-4">
-        {isEditMode ? (
-          <>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsEditMode(false)}
-              className="w-full py-3 bg-white rounded-2xl shadow-sm text-gray-800 font-medium border border-gray-200"
-            >
-              Cancel
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSave}
-              className="w-full py-3 bg-blue-600 text-white rounded-2xl shadow-sm font-medium"
-            >
-              Save
-            </motion.button>
-          </>
-        ) : (
-          <>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsEditMode(true)}
-              className="w-full py-3 bg-white rounded-2xl shadow-sm text-gray-800 font-medium"
-            >
-              Edit
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => alert('Save functionality coming soon')}
-              className="w-full py-3 bg-blue-600 text-white rounded-2xl shadow-sm font-medium"
-            >
-              Save
-            </motion.button>
-          </>
-        )}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIsEditMode(!isEditMode)}
+          className={cn(
+            'w-full py-3 bg-white rounded-2xl shadow-sm text-gray-800 font-medium',
+            isEditMode && 'border border-gray-200'
+          )}
+        >
+          {isEditMode ? 'Cancel' : 'Edit'}
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={handleSave}
+          className="w-full py-3 bg-blue-600 text-white rounded-2xl shadow-sm font-medium"
+        >
+          Save
+        </motion.button>
       </div>
     </div>
   )
