@@ -13,7 +13,7 @@ function isAuthPage(pathname: string) {
   return AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(p + '/'))
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
 
   const supabase = createServerClient(
