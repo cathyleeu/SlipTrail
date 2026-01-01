@@ -1,4 +1,7 @@
 export * from './BottomNavigation'
+export * from './Divider'
 export * from './Header'
+export * from './IconButton'
 export * from './Input'
+export * from './InputField'
 export * from './ProcessingDialog'
