@@ -3,15 +3,14 @@
 import { Divider } from '@components/Divider'
 import { InputField } from '@components/InputField'
 import { AppleIcon, EmailIcon, EyeIcon, EyeOffIcon, GoogleIcon } from '@components/icons'
-import { useInput } from '@hooks/useInput'
-import { supabaseClient } from '@lib/supabase/client'
+import { useAuth, useInput } from '@hooks'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 export default function SignUpPage() {
-  const supabase = supabaseClient()
   const router = useRouter()
+  const { signup } = useAuth()
 
   const email = useInput({ type: 'email' })
   const password = useInput({ type: 'password' })
@@ -30,15 +29,12 @@ export default function SignUpPage() {
       return
     }
 
-    const { error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
-    })
+    const { error } = await signup(email.value, password.value)
 
     setLoading(false)
 
     if (error) {
-      setError(error.message)
+      setError(error)
     } else {
       alert('Check your email for confirmation!')
       router.push('/login')
