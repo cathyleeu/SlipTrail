@@ -58,15 +58,13 @@ export type GeocodeFailure = {
 export type GeocodeResult = GeocodeSuccess | GeocodeFailure
 
 /**
- * Convert Nominatim response to MapLocation
+ * Place (location entity for DB storage)
  */
-export function toGeoLocation(api: NominatimResponse): GeoLocation {
-  return {
-    lat: Number(api.lat),
-    lng: Number(api.lon),
-    address: api.display_name,
-    displayName: api.name || '',
-    placeId: api.place_id,
-    boundingBox: api.boundingbox.map(Number) as [number, number, number, number],
-  }
+export type Place = {
+  osm_ref: string
+  name: string
+  address: string
+  normalized_address?: string | null
+  lat: number
+  lon: number
 }
