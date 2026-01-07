@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server'
+import { apiError, apiSuccess } from '@lib/apiResponse'
 
 export async function POST(req: Request) {
   const { address } = await req.json()
 
   if (!address) {
-    return NextResponse.json({ success: false, error: 'Address required' }, { status: 400 })
+    return apiError('Address required', { status: 400 })
   }
 
   const url = new URL('https://nominatim.openstreetmap.org/search')
@@ -21,14 +21,8 @@ export async function POST(req: Request) {
   const data = await res.json()
 
   if (!Array.isArray(data) || data.length === 0) {
-    return NextResponse.json({
-      success: false,
-      error: 'Address not found',
-    })
+    return apiError('Address not found', { status: 404 })
   }
 
-  return NextResponse.json({
-    success: true,
-    data: data[0],
-  })
+  return apiSuccess(data[0])
 }

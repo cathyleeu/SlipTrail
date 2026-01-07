@@ -1,6 +1,7 @@
+import { apiError, apiSuccess } from '@lib/apiResponse'
+import { requireAuth } from '@lib/auth'
 import { supabaseServer } from '@lib/supabase/server'
 import type { ParsedReceipt } from '@types'
-import { NextResponse } from 'next/server'
 
 type Params = {
   params: Promise<{ id: string }>
@@ -10,36 +11,34 @@ export async function GET(req: Request, { params }: Params) {
   try {
     const supabase = await supabaseServer()
     const { id } = await params
+    const auth = await requireAuth(supabase)
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!auth.ok) return auth.response
 
     // 특정 영수증 조회
     const { data, error } = await supabase
       .from('receipts')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', auth.user.id)
       .single()
 
     if (error) {
       console.error('Error fetching receipt:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return apiError(error.message, { status: 500 })
     }
 
     if (!data) {
-      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 })
+      return apiError('Receipt not found', { status: 404 })
     }
 
-    return NextResponse.json({ success: true, receipt: data })
+    return apiSuccess(data)
   } catch (error) {
     console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return apiError('Unauthorized', { status: 401 })
+    }
+    return apiError('Unexpected error occurred', { status: 500 })
   }
 }
 
@@ -47,14 +46,9 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     const supabase = await supabaseServer()
     const { id } = await params
+    const auth = await requireAuth(supabase)
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!auth.ok) return auth.response
 
     // 요청 body 파싱
     const body = await req.json()
@@ -64,7 +58,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     if (!receipt && !location) {
-      return NextResponse.json({ error: 'No data to update' }, { status: 400 })
+      return apiError('No data to update', { status: 400 })
     }
 
     // 업데이트할 데이터 준비
@@ -94,23 +88,26 @@ export async function PATCH(req: Request, { params }: Params) {
       .from('receipts')
       .update(updateData)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', auth.user.id)
       .select()
       .single()
 
     if (error) {
       console.error('Error updating receipt:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return apiError(error.message, { status: 500 })
     }
 
     if (!data) {
-      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 })
+      return apiError('Receipt not found', { status: 404 })
     }
 
-    return NextResponse.json({ success: true, receipt: data })
+    return apiSuccess(data)
   } catch (error) {
     console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return apiError('Unauthorized', { status: 401 })
+    }
+    return apiError('Unexpected error occurred', { status: 500 })
   }
 }
 
@@ -118,26 +115,28 @@ export async function DELETE(req: Request, { params }: Params) {
   try {
     const supabase = await supabaseServer()
     const { id } = await params
+    const auth = await requireAuth(supabase)
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!auth.ok) return auth.response
 
     // 영수증 삭제
-    const { error } = await supabase.from('receipts').delete().eq('id', id).eq('user_id', user.id)
+    const { error } = await supabase
+      .from('receipts')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', auth.user.id)
 
     if (error) {
       console.error('Error deleting receipt:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return apiError(error.message, { status: 500 })
     }
 
-    return NextResponse.json({ success: true })
+    return apiSuccess({ success: true })
   } catch (error) {
     console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return apiError('Unauthorized', { status: 401 })
+    }
+    return apiError('Unexpected error occurred', { status: 500 })
   }
 }

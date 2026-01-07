@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const rawText = body.rawText.trim()
 
-    // 2️⃣ OCR 결과 최소 검증
+    // verify OCR result minimum validation
     if (rawText.length < 30) {
       return apiError('OCR text too short', {
         status: 422,
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 3️⃣ LLM 호출
+    // request LLM to parse receipt
     let llmResponse: string | null = null
     try {
       llmResponse = await parseReceipt(rawText)
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       return apiError('LLM returned empty response', { status: 502 })
     }
 
-    // 4️⃣ JSON 파싱
+    // parse LLM response as JSON
     let parsedJson: unknown
     try {
       parsedJson = JSON.parse(llmResponse)
@@ -44,25 +44,8 @@ export async function POST(request: NextRequest) {
       return apiError('Invalid JSON returned from LLM', { status: 500, details: llmResponse })
     }
 
-    // 5️⃣ (선택) Schema validation
-    /*
-    try {
-      parsedJson = ReceiptSchema.parse(parsedJson)
-    } catch (err) {
-      return NextResponse.json(
-        {
-          error: 'Parsed receipt does not match schema',
-          issues: err,
-        },
-        { status: 422 }
-      )
-    }
-    */
-
-    // 6️⃣ 성공
     return apiSuccess(parsedJson)
   } catch (err) {
-    // 🔥 진짜 예상 못한 에러
     console.error('[UNHANDLED ERROR]', err)
 
     return apiError('Internal server error', {
