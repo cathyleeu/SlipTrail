@@ -1,7 +1,7 @@
 'use client'
 
 import { useMapDraftStore, useReceiptDraftStore, useReceiptImageStore } from '@store'
-import { compressImage } from '@utils/compressImage'
+import { compressImage } from '@utils/imageProcessor'
 import { useCallback, useState } from 'react'
 import { useAnalysisMutation } from './useAnalysisMutation'
 
