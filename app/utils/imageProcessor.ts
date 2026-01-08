@@ -1,5 +1,7 @@
 'use client'
 
+import { MIME_TYPES } from '@app/lib'
+import type { ImageFormat } from '@types'
 import imageCompression from 'browser-image-compression'
 
 export async function blobToImage(blob: Blob): Promise<HTMLImageElement> {
@@ -17,14 +19,6 @@ export async function blobToImage(blob: Blob): Promise<HTMLImageElement> {
 
 export function blobToFile(blob: Blob, fileName = new Date().toISOString()): File {
   return new File([blob], fileName, { type: blob.type, lastModified: Date.now() })
-}
-
-type ImageFormat = 'webp' | 'jpeg' | 'png'
-
-const MIME_TYPES: Record<ImageFormat, string> = {
-  webp: 'image/webp',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
 }
 
 export async function convertImage(
